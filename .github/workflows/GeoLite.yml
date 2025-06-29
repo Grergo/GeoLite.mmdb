@@ -12,6 +12,9 @@ jobs:
     timeout-minutes: 5
 
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
     - name: Download GeoLite.mmdb
       run: |
         wget -nv -O- "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-ASN&license_key=${{ secrets.LICENSE_KEY }}&suffix=tar.gz" | tar zxv
@@ -38,7 +41,7 @@ jobs:
         git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
         git push -f origin download
 
-    - name: Upload to Releases
+    - name: Upload versioned release
       uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -48,6 +51,19 @@ jobs:
         files: |
           upload/*.mmdb
           upload/GeoLite.mmdb.tar.gz
+
+    - name: Upload latest release (overwrite)
+      uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: latest
+        body: Latest Release
+        prerelease: false
+        files: |
+          upload/*.mmdb
+          upload/GeoLite.mmdb.tar.gz
+        fail_on_unmatched_files: true
 
     - name: Remove old Releases
       uses: dev-drprasad/delete-older-releases@master
